@@ -13,4 +13,4 @@ config_version=5
 config/name="fatemap_example_test"
 run/main_scene="uid://bstfl6a78e6cj"
 config/features=PackedStringArray("4.5", "Forward Plus")
-config/icon="res://_icon.svg"
+config/icon="res://icon.svg"
