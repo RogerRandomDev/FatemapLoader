@@ -1,0 +1,207 @@
+@tool
+extends Node3D
+
+const compilerVersion:int=0
+
+@export_file_path(".fatemap") var mapFile:String
+@export var size:float=1.0
+@export var reload:bool=false:
+	set(v):
+		reloadMap()
+	get:return false
+
+signal fmt_loaded
+signal objects_loaded
+signal finished
+
+### DATA FOR PARSING OUT THE MAP
+var decompiler:compilerService.decompilerInfo
+
+var currentSeek:int=0
+var collisionSets:Dictionary={}
+
+
+func _ready() -> void:
+	if Engine.is_editor_hint():return
+	reloadMap()
+
+func reloadMap()->void:
+	MaterialService.loadAllFMT("res://Imported/Materials")
+	for child in get_children():
+		child.queue_free()
+	if mapFile.is_empty():return
+	var f=FileAccess.open_compressed(mapFile,FileAccess.READ,FileAccess.COMPRESSION_GZIP)
+	currentSeek=0
+	fullLoad(self,f)
+	#if in editor remove any processing to prevent problems
+	if not Engine.is_editor_hint():return
+	for child in get_children():
+		child.process_mode=Node.PROCESS_MODE_DISABLED
+
+func loadVersionFormat(file:FileAccess)->void:
+	var versionBytes:PackedByteArray=file.get_buffer(6)
+	versionBytes.append_array(file.get_buffer(versionBytes.decode_u32(2)))
+	decompiler.loadFormat(versionBytes)
+	file.get_8()
+
+func loadStringList(file:FileAccess)->void:
+	var stringCount:int=file.get_buffer(4).decode_u32(0)
+	for i in stringCount:
+		var n_byte=file.get_8()
+		var string=""
+		while n_byte!=0:
+			#slow but works
+			string+=PackedByteArray([n_byte]).get_string_from_ascii()
+			n_byte=file.get_8()
+		decompiler.stringList.push_back(string as StringName)
+	file.get_8()
+
+func loadFMTS(file:FileAccess)->void:
+	var matCount:int=file.get_buffer(4).decode_u32(0)
+	for i in matCount:
+		decompiler.materialList.push_back(MaterialService.getMaterialByHash(file.get_buffer(4).decode_u32(0)))
+	file.get_8()
+
+
+func loadObjects(loadOnto:Node,file:FileAccess)->void:
+	var objectCount:int=file.get_buffer(4).decode_u32(0)
+	var scaleVector:Vector3=Vector3(1.0/size,1.0/size,1.0/size)
+	
+	for i in objectCount:
+		var loadingObject = file.get_buffer(4).decode_u32(0)
+		var _objectName = decompiler.stringList[loadingObject]
+		var objectType = file.get_8()
+		#file.get_8()
+		var objectTransform = file.get_buffer(24)
+		var decodedTransform:Transform3D=Transform3D()
+		# applies position|rotation|scale
+		decodedTransform.origin=compilerService.decodeVector3Float(0,objectTransform,false)
+		decodedTransform.basis=Basis.from_euler(compilerService.decodeVector3Float(12,objectTransform,true))
+		decodedTransform.basis=decodedTransform.basis.scaled_local(compilerService.decodeVector3Float(18,objectTransform,true))
+		
+		var obj:CompiledObjectModel.ObjectModelData=CompiledObjectModel.ObjectModelData.new()
+		var objData=ObjectDataResource.new()
+		
+		#have to get the encoded parameters out as well
+		var paramBlockSize:int=file.get_buffer(4).decode_u32(0)
+		var paramData = compilerService.paramsDecode(file.get_buffer(paramBlockSize),decompiler)
+		if paramData!=null:
+			for param in paramData.keys():
+				objData.addInstanceParam(param,paramData[param][1],paramData[param][0])
+		#load the tag list in
+		var tagBlockSize:int=file.get_buffer(2).decode_u16(0)
+		for e in tagBlockSize:
+			var tagName=decompiler.stringList[
+				file.get_buffer(4).decode_u32(0)
+			]
+			objData.baseTags.push_back(tagName)
+		#file.get_8()
+		
+		
+		match objectType:
+			ObjectModel.objectTypes.MESH:
+				var surfaceSize=file.get_buffer(4).decode_u32(0)
+				var objectMesh:ArrayMesh
+				if surfaceSize!=0:
+					objectMesh=CompiledObjectModel.ObjectMesh.loadCompiledMesh(
+					decompiler,
+					decompiler.materialList,
+					file.get_buffer(surfaceSize),
+					1.0/size
+				)
+				var collisionSize:int=file.get_buffer(2).decode_u16(0)
+				var objectColliderST = loadObjectCollision(file.get_buffer(collisionSize))
+				obj.objectType=ObjectModel.objectTypes.MESH
+				objData = ObjectPhysicalDataResource.new(objData)
+				
+				objData.inheritedData=load("res://modelData/meshObject.tres")
+				
+				objData.mesh=objectMesh
+				obj.objectData=objData
+				var placedObjects=loadOnto
+				var builtObj = obj.build()
+				placedObjects.add_child(builtObj)
+				(func():
+					await objects_loaded
+					var mode = int(obj.objectData.findParam("concave").get("value",false))
+					attachObjectCollision(builtObj,mode,objectColliderST)
+				).call()
+				
+			ObjectModel.objectTypes.OBJECT:
+				obj.objectType=ObjectModel.objectTypes.OBJECT
+				objData = ObjectDataResource.new(objData)
+				obj.objectData=objData
+				#TODO: parse and actually load OBJECT contents
+				var objectSize:int=file.get_buffer(4).decode_u32(0)
+				obj.objectTargetFile=file.get_buffer(objectSize).get_string_from_ascii()
+				var placedObjects=loadOnto
+				var builtObj=obj.build()
+				placedObjects.add_child(builtObj)
+				#file.get_8()
+				decodedTransform=decodedTransform.scaled_local(scaleVector)
+			ObjectModel.objectTypes.DATA:
+				obj.objectType=ObjectModel.objectTypes.DATA
+				objData=ObjectDataResource.new(objData)
+				obj.objectData=objData
+				var builtObj=obj.build()
+				loadOnto.add_child(builtObj)
+				
+		#set object transform we already calculated
+		obj.global_transform=decodedTransform
+		obj.global_transform.origin/=size
+
+func loadObjectCollision(collision:PackedByteArray)->SurfaceTool:
+	var use_half_precision:bool=decompiler.formatParameters.get("precision:half_precision_collision",false)
+	var use_bytes:int=6<<int(!use_half_precision)
+	var st:SurfaceTool=SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var curAt:int=0
+	var scaler:float= 1.0/size
+	while curAt<collision.size():
+		var collision_vertex=compilerService.decodeVector3Float(curAt,collision,use_half_precision)
+		curAt+=use_bytes
+		st.add_vertex(collision_vertex*scaler)
+	return st
+
+func attachObjectCollision(obj:Node,mode:int,collisionST:SurfaceTool)->void:
+	var body=obj
+	if not obj is CollisionObject3D:
+		body = StaticBody3D.new()
+	var collider=CollisionShape3D.new()
+	if mode==0:
+		collider.shape=collisionST.commit().create_convex_shape()
+	else:
+		collider.shape=collisionST.commit().create_trimesh_shape()
+	body.add_child(collider)
+	#if marked replace, remove it and just use this
+	if obj and obj.has_meta("replace"):
+		body.global_transform=obj.global_transform
+		obj.get_parent().add_child(body)
+		decompiler.objectList.erase(obj)
+		decompiler.objectList.push_back(body)
+		obj.queue_free()
+		return
+	if body!=obj:obj.add_child(body)
+
+
+func fullLoad(loadOnto:Node,file:FileAccess)->void:
+	decompiler=compilerService.decompilerInfo.new()
+	loadVersionFormat(file)
+	if decompiler.formatVersion!=compilerVersion:
+		push_error("Mismatched compiler/decompiler versions. %s:%s"%[decompiler.formatVersion,compilerVersion])
+		return
+	
+	loadStringList(file)
+	loadFMTS(file)
+	fmt_loaded.emit()
+	#loadVectorIDS(file)
+	#id_loaded.emit()
+	loadObjects(loadOnto,file)
+	objects_loaded.emit()
+	finished.emit()
+	if Engine.is_editor_hint():
+		for child in get_children():att(child)
+
+func att(n):
+	n.owner=get_tree().edited_scene_root
+	for child in n.get_children():att(child)
