@@ -1,5 +1,5 @@
 name = NONE
 material = Materials/Default/defaultMaterial.material
-texture = Materials/Default/None.tres
+texture = Materials/Default/None.png
 parameters = {}
 tags = []
