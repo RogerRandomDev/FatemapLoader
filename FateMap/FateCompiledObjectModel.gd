@@ -67,29 +67,32 @@ class ObjectMesh extends ArrayMesh:
 	static func loadCompiledMesh(decompiler:compilerService.decompilerInfo=null,matList:Array=[],binary:PackedByteArray=[],scaler:float=1.0)->ArrayMesh:
 		var use_half_precision:bool=decompiler.formatParameters.get("precision:half_precision_vertex",false)
 		var vertex_bytes:int=6<<int(!use_half_precision)
-		var bytes_used:int=14+vertex_bytes*3
+		var bytes_used:int=12+vertex_bytes*3
 		var sub_offset :int= vertex_bytes+4
 		
 		var checkFrom:int=0
 		var surfaces:Dictionary={}
-		
 		while true:
-			var faceData = binary.slice(checkFrom,checkFrom+bytes_used)
-			checkFrom+=bytes_used
-			if(faceData.size()<bytes_used):break;
-			var surfaceUsed = matList[faceData.decode_u16(0)]
-			if not surfaces.has(surfaceUsed):
-				var st=SurfaceTool.new()
-				st.begin(Mesh.PRIMITIVE_TRIANGLES)
-				st.set_material(surfaceUsed.materialMat)
-				surfaces[surfaceUsed]=st
-			var surface_st:SurfaceTool=surfaces[surfaceUsed]
-			for i in 3:
-				surface_st.set_uv(Vector2(
-						faceData.decode_half(2+vertex_bytes+sub_offset*i),
-						faceData.decode_half(4+vertex_bytes+sub_offset*i)
-					))
-				surface_st.add_vertex(compilerService.decodeVector3Float(2+sub_offset*i,faceData,use_half_precision)*scaler)
+			if binary.size()<=checkFrom:break
+			var facesForMat:int=binary.decode_u32(checkFrom)
+			var surfaceUsed = matList[binary.decode_u16(checkFrom+4)]
+			checkFrom+=6
+			for f in facesForMat:
+				var faceData = binary.slice(checkFrom,checkFrom+bytes_used)
+				checkFrom+=bytes_used
+				if(faceData.size()<bytes_used):break;
+				if not surfaces.has(surfaceUsed):
+					var st=SurfaceTool.new()
+					st.begin(Mesh.PRIMITIVE_TRIANGLES)
+					st.set_material(surfaceUsed.materialMat)
+					surfaces[surfaceUsed]=st
+				var surface_st:SurfaceTool=surfaces[surfaceUsed]
+				for i in 3:
+					surface_st.set_uv(Vector2(
+							faceData.decode_half(vertex_bytes+sub_offset*i),
+							faceData.decode_half(2+vertex_bytes+sub_offset*i)
+						))
+					surface_st.add_vertex(compilerService.decodeVector3Float(sub_offset*i,faceData,use_half_precision)*scaler)
 		var outputMesh:ArrayMesh=ArrayMesh.new()
 		for st in surfaces.values():
 			st.commit(outputMesh)

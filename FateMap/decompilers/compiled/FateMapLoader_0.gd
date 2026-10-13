@@ -114,7 +114,7 @@ func loadObjects(loadOnto:Node,file:FileAccess)->void:
 				obj.objectType=ObjectModel.objectTypes.MESH
 				objData = ObjectPhysicalDataResource.new(objData)
 				
-				objData.inheritedData=load("res://FateMap/modelData/meshObject.tres")
+				objData.inheritedData=load("res://FateMap/modelData/_defaults/meshObject.tres")
 				
 				objData.mesh=objectMesh
 				obj.objectData=objData
