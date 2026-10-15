@@ -9,6 +9,10 @@ const compilerVersion:int=0
 	set(v):
 		reloadMap()
 	get:return false
+## collision meshes used to figure out what material a specific point is
+@export var addFMTCheckMeshes:bool=false
+
+
 
 signal fmt_loaded
 signal objects_loaded
@@ -111,6 +115,7 @@ func loadObjects(loadOnto:Node,file:FileAccess)->void:
 				)
 				var collisionSize:int=file.get_buffer(2).decode_u16(0)
 				var objectColliderST = loadObjectCollision(file.get_buffer(collisionSize))
+				if addFMTCheckMeshes:loadObjectFMTCollision(objectMesh)
 				obj.objectType=ObjectModel.objectTypes.MESH
 				objData = ObjectPhysicalDataResource.new(objData)
 				
@@ -182,6 +187,13 @@ func attachObjectCollision(obj:Node,mode:int,collisionST:SurfaceTool)->void:
 		obj.queue_free()
 		return
 	if body!=obj:obj.add_child(body)
+
+func loadObjectFMTCollision(mesh:FateFinalMesh)->void:
+	for surface in mesh.get_surface_count():
+		var points = mesh.surface_get_arrays(surface)[0]
+		var triangles=TriangleMesh.new()
+		triangles.create_from_faces(points)
+		mesh.fmtMeshes.push_back(triangles)
 
 
 func fullLoad(loadOnto:Node,file:FileAccess)->void:

@@ -93,7 +93,7 @@ class ObjectMesh extends ArrayMesh:
 							faceData.decode_half(2+vertex_bytes+sub_offset*i)
 						))
 					surface_st.add_vertex(compilerService.decodeVector3Float(sub_offset*i,faceData,use_half_precision)*scaler)
-		var outputMesh:ArrayMesh=ArrayMesh.new()
+		var outputMesh:FateFinalMesh=FateFinalMesh.new()
 		for st in surfaces.values():
 			st.commit(outputMesh)
 		return outputMesh

@@ -21,9 +21,12 @@ static func addMaterial(materialName:StringName,material:Material=null,texture:T
 	var newMaterial=materialModel.new(materialName,params,path,ignoreBaseParams)
 	if materialList.any(func(mat):return mat.checkConflict(newMaterial)):
 		return false
+	
+	
 	materialHashes[newMaterial.materialHash]=newMaterial
 	newMaterial.setMaterial(material)
 	newMaterial.setTexture(texture)
+	newMaterial.setParameters(params)
 	newMaterial.setTags(tags)
 	newMaterial.updateMaterial()
 	materialList.push_back(newMaterial)
@@ -51,26 +54,60 @@ static func loadAllFMT(path:String)->void:
 static func loadFMT(fmtPath:String)->materialModel:
 	if not FileAccess.file_exists(fmtPath):return null
 	var file = FileAccess.open(fmtPath,FileAccess.READ)
-	var contents = file.get_as_text().split("\n",true)
+	var contents = Array(file.get_as_text().split("\n",true))
 	var values:Dictionary={}
-	for line in contents:
-		var lineContext = line.split("=")
-		if lineContext.size()<2:continue
-		var lineRepresents = lineContext[0].strip_edges()
-		var lineValue = lineContext[1].strip_edges()
-		values[lineRepresents] = lineValue
+	var nameLine = contents.find_custom(FMTLineParameterFind.bind("name"))
+	var materialLine = contents.find_custom(FMTLineParameterFind.bind("material"))
+	var textureLine = contents.find_custom(FMTLineParameterFind.bind("texture"))
+	var parameterStartLine = contents.find_custom(FMTLineParameterFind.bind("parameters"))
+	var tagStartLine = contents.find_custom(FMTLineParameterFind.bind("tags"))
+	
+	values["name"]=getValueOfFMTLine(contents[nameLine],"NONE")
+	values["material"]=getValueOfFMTLine(contents[materialLine],"Default/defaultMaterial.material")
+	values["texture"]=getValueOfFMTLine(contents[textureLine],"Default/defaultTexture.png")
+	
+	#parameters
+	var parameterLines=getValueOfFMTLine(contents[parameterStartLine],"{}").strip_edges().trim_prefix("{").trim_suffix("}").split(",")
+	var i:int=parameterStartLine+1
+	while contents[i].begins_with("\t"):
+		var split_sub=contents[i].split("=")
+		split_sub[0]="\"%s\""%split_sub[0].strip_edges()
+		var subLine=":".join(split_sub).strip_edges()
+		if subLine.length()<2:continue
+		parameterLines.push_back(subLine)
+		i+=1
+	parameterLines=",".join(parameterLines)
+	parameterLines = "{%s}"%parameterLines.trim_prefix(",")
+	if not parameterLines.contains(":"):values["parameters"]={}
+	else:values["parameters"]=JSON.parse_string(parameterLines)
+	#tags
+	var tagLines=getValueOfFMTLine(contents[tagStartLine],"").strip_edges().trim_prefix("[").trim_suffix("]").split(",")
+	i=tagStartLine+1
+	while contents.size()>i and contents[i].begins_with("\t"):
+		var subLine=contents[i].strip_edges()
+		if subLine.is_empty():continue
+		tagLines.push_back(subLine)
+		i+=1
+	tagLines=",".join(tagLines)
+	
 	addMaterial(
-		values.get("name","NONE"),
-		load("res://FateMap/Imported/"+values.get("material","Default/defaultMaterial.material")),
-		load("res://FateMap/Imported/"+values.get("texture","Default/defaultTexture.png")),
-		{},#values.get("parameters",{})
+		values.get("name"),
+		load("res://FateMap/Imported/"+values.get("material")),
+		load("res://FateMap/Imported/"+values.get("texture")),
+		values.get("parameters",{}),
 		values.get("tags","").split(","),
 		fmtPath
 	)
 	
 	return getMaterial(values.get("name","NONE"))
 
+static func FMTLineParameterFind(line,compare)->bool:
+	return line.split("=")[0].strip_edges(false)==compare
 
+static func getValueOfFMTLine(line,default)->String:
+	var sub=line.split("=",1)
+	if sub.size()<1:return default
+	return sub[1].strip_edges()
 
 
 class materialModel extends Resource:
@@ -103,6 +140,7 @@ class materialModel extends Resource:
 			materialMat=mat.duplicate(true)
 		else:
 			materialMat=mat
+		materialMat.set_meta(&"FMT",self)
 		updateMaterial()
 	
 	##Sets the parameters for the material using the provided dictionary

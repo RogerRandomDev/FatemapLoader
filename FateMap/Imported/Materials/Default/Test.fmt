@@ -1,5 +1,7 @@
 name = Test
 material = Materials/Default/defaultMaterial.material
 texture = Materials/Default/Test_0.png
-parameters = {}
+parameters = {
+	step_sound = "testing_sound_file.wav"
+}
 tags = []

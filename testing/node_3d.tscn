@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://bstfl6a78e6cj"]
+[gd_scene load_steps=4 format=3 uid="uid://bstfl6a78e6cj"]
 
 [ext_resource type="Script" uid="uid://whoevay6xrwu" path="res://FateMap/decompilers/compiled/FateMapLoader_0.gd" id="1_xalmp"]
 [ext_resource type="PackedScene" uid="uid://cc1m2a1obsyn4" path="res://character3D-2f9aa62bbb55e1ac17d277f5008d9df982168336/character.tscn" id="2_4qtuw"]
+[ext_resource type="Script" uid="uid://1574wd73nm2g" path="res://testing/ray_cast_3d.gd" id="3_w0r02"]
 
 [node name="Node3D" type="Node3D"]
 
@@ -9,6 +10,12 @@
 script = ExtResource("1_xalmp")
 mapFile = "user://../FateMap/test.fatemap"
 size = 2.0
+addFMTCheckMeshes = true
 
 [node name="Character" parent="." instance=ExtResource("2_4qtuw")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5354496, 0)
+
+[node name="RayCast3D" type="RayCast3D" parent="Character"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.100000024, 0)
+target_position = Vector3(0, -0.125, 0)
+script = ExtResource("3_w0r02")
