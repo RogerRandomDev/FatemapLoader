@@ -1,15 +1,6 @@
 extends RayCast3D
 class_name RayCastFMT
 
-
-
-func _input(event: InputEvent) -> void:
-	if not event is InputEventMouseButton:return
-	if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):return
-	var fmt=getFMT()
-	if fmt==null:return
-	print(fmt.materialParameters.get("step_sound",""))
-
 func getFMT():
 	var mat = getCollidingMaterial() as Material
 	if mat==null:return
