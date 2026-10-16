@@ -1,7 +1,7 @@
 @tool
 extends EditorPlugin
 
-var tools=load("res://addons/fatemap/toolScripts.gd").new()
+var tools=load("res://addons/fatemap/Tools/toolScripts.gd").new()
 
 func _enable_plugin() -> void:
 	# Add autoloads here.

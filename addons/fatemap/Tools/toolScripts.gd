@@ -1,7 +1,7 @@
 @tool
 extends Node
 
-var FMTCreatePopup=load("res://addons/fatemap/CreateFMTPopup.tscn")
+var FMTCreatePopup=load("res://addons/fatemap/Tools/CreateFMTPopup.tscn")
 
 const FMTBaseFormat="name = %s
 material = Materials/Default/defaultMaterial.material
