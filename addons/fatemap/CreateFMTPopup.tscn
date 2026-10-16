@@ -1,0 +1,143 @@
+[gd_scene format=3 uid="uid://w0k3f5biyvmd"]
+
+[sub_resource type="GDScript" id="GDScript_xbsyq"]
+script/source = "@tool
+extends Window
+var data
+func _ready() -> void:
+	loadTextures()
+	$VBoxContainer/Tree.item_edited.connect(cell_selected)
+	
+	$VBoxContainer/HBoxContainer/cancelCreate.pressed.connect(
+		func():
+			$VBoxContainer/Tree.clear()
+			$VBoxContainer/Tree.create_item()
+			close_requested.emit()
+	)
+	$VBoxContainer/HBoxContainer/confirmCreate.pressed.connect(
+		func():
+			data=getCreateList()
+			close_requested.emit()
+	)
+	
+func loadTextures()->void:
+	var tree:Tree=$VBoxContainer/Tree
+	tree.clear()
+	var root:TreeItem = tree.create_item()
+	var allFolders=getFoldersAt(\"res://FateMap/Imported/Materials\")
+	var allTextures=getTexturesAt(\"res://FateMap/Imported/Materials\")
+	var folderItems:Dictionary={}
+	for folder in allFolders:
+		if folder.begins_with(\"Default\"):continue
+		if not folderItems.has(folder.rsplit(\"/\",true,1)[0]):
+			var ownerFolders=folder.split(\"/\")
+			for i in ownerFolders.size():
+				var subPath=\"/\".join(ownerFolders.slice(0,i))
+				var myPath=\"/\".join(ownerFolders.slice(0,i+1))
+				var ownerItem :TreeItem= folderItems.get(subPath,root)
+				var newItem = ownerItem.create_child()
+				newItem.set_cell_mode(0,TreeItem.CELL_MODE_CHECK)
+				newItem.set_text(0,ownerFolders[i])
+				newItem.set_editable(0,true)
+				folderItems[myPath]=newItem
+				newItem.set_metadata(0,\"Folder\")
+		else:
+			var newItem = folderItems.get(folder.rsplit(\"/\",1)[0],root).create_child()
+			newItem.set_cell_mode(0,TreeItem.CELL_MODE_CHECK)
+			newItem.set_text(0,folder.rsplit(\"/\",true,1)[-1])
+			newItem.set_editable(0,true)
+			folderItems[folder]=newItem
+			newItem.set_metadata(0,\"Folder\")
+	for texture in allTextures:
+		if texture.begins_with(\"Default\"):continue
+		var folderHolder=texture.rsplit(\"/\",true,1)
+		var holderItem:TreeItem=folderItems.get(folderHolder[0],root)
+		var item:TreeItem=holderItem.create_child()
+		item.set_cell_mode(0,TreeItem.CELL_MODE_CHECK)
+		item.set_editable(0,true)
+		item.set_metadata(0,texture)
+		item.set_text(0,folderHolder[-1])
+
+func cell_selected()->void:
+	var tree:Tree=$VBoxContainer/Tree
+	var selected:TreeItem=tree.get_selected()
+	if selected==null:return
+	var value=selected.is_checked(0)
+	var meta=selected.get_metadata(0) 
+	if meta is String and meta==\"Folder\":
+		selected.propagate_check(0)
+
+func getCreateList()->PackedStringArray:
+	var tree:Tree=$VBoxContainer/Tree
+	var arr:PackedStringArray=getSubList(tree.get_root())
+	return arr
+
+func getSubList(item:TreeItem)->PackedStringArray:
+	var arr:PackedStringArray=[]
+	for child in item.get_children():
+		var m=child.get_metadata(0)
+		if child.is_checked(0) or m==\"Folder\":
+			if m!=\"Folder\":arr.push_back(m)
+			arr.append_array(getSubList(child))
+	return arr
+
+
+
+func getFoldersAt(path:String):
+	const valid_extensions=[\"png\",\"jpeg\",\"jpg\",\"svg\"]
+	var newPaths=[]
+	var skip=false
+	for dir in DirAccess.get_directories_at(path):
+		var newSets=getFoldersAt(path+\"/\"+dir)
+		if newSets.size()!=0:skip=true
+		newPaths.append_array(newSets)
+	if path!=\"res://FateMap/Imported/Materials\" and not skip:
+		newPaths.push_back(path.trim_prefix(\"res://FateMap/Imported/Materials/\"))
+	return newPaths
+
+func getTexturesAt(path:String):
+	const valid_extensions=[\"png\",\"jpeg\",\"jpg\",\"svg\"]
+	var newTextures=[]
+	for dir in DirAccess.get_directories_at(path):
+		newTextures.append_array(getTexturesAt(path+\"/\"+dir))
+	for file in DirAccess.get_files_at(path):
+		if not valid_extensions.has(file.rsplit(\".\")[-1]):continue
+		newTextures.push_back(\"%s/%s\"%[path.trim_prefix(\"res://FateMap/Imported/Materials/\"),file])
+	return newTextures
+"
+
+[node name="CreateFmtPopup" type="Window" unique_id=58806554]
+oversampling_override = 1.0
+title = "Select Textures"
+initial_position = 4
+size = Vector2i(256, 192)
+popup_window = true
+extend_to_title = true
+script = SubResource("GDScript_xbsyq")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1466803853]
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 252.0
+offset_bottom = 188.0
+
+[node name="Tree" type="Tree" parent="VBoxContainer" unique_id=1468207966]
+layout_mode = 2
+size_flags_vertical = 3
+allow_reselect = true
+allow_search = false
+enable_drag_unfolding = false
+hide_root = true
+auto_tooltip = false
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer" unique_id=192250205]
+layout_mode = 2
+
+[node name="cancelCreate" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=595781048]
+layout_mode = 2
+text = "Cancel"
+
+[node name="confirmCreate" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=1942100603]
+layout_mode = 2
+size_flags_horizontal = 10
+text = "Confirm"

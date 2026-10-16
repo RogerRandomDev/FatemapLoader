@@ -18,3 +18,7 @@ config/name="fatemap_example_test"
 run/main_scene="uid://bstfl6a78e6cj"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/fatemap/plugin.cfg")
