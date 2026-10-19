@@ -42,7 +42,7 @@ func loadTextures()->void:
 				folderItems[myPath]=newItem
 				newItem.set_metadata(0,\"Folder\")
 		else:
-			var newItem = folderItems.get(folder.rsplit(\"/\",1)[0],root).create_child()
+			var newItem = folderItems.get(folder.rsplit(\"/\",true,1)[0],root).create_child()
 			newItem.set_cell_mode(0,TreeItem.CELL_MODE_CHECK)
 			newItem.set_text(0,folder.rsplit(\"/\",true,1)[-1])
 			newItem.set_editable(0,true)

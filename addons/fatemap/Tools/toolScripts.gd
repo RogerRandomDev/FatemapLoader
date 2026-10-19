@@ -22,7 +22,6 @@ func CreateFMTs()->void:
 		var n=texture.rsplit("/",true,1)[-1]
 		var FMTPath="res://FateMap/Imported/Materials/%s.fmt"%texture.rsplit(".",true,1)[0]
 		if FileAccess.file_exists(FMTPath):continue
-		print(FMTPath)
 		var f=FileAccess.open(FMTPath,FileAccess.WRITE)
 		f.store_string(FMTBaseFormat%[n,texture])
 		f.close()

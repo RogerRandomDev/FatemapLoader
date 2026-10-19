@@ -1,0 +1,5 @@
+name = grassTop.png
+material = Materials/Default/defaultMaterial.material
+texture = Materials/Game/grassTop.png
+parameters = {}
+tags = []
