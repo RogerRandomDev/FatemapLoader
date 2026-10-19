@@ -30,7 +30,8 @@ func _ready() -> void:
 	reloadMap()
 
 func reloadMap()->void:
-	MaterialService.loadAllFMT("res://FateMap/Imported/Materials") # Waiting replacement to not load Everything.
+	MaterialService.loadHashMap()
+	#MaterialService.loadAllFMT("res://FateMap/Imported/Materials") # Waiting replacement to not load Everything.
 	for child in get_children():
 		child.queue_free()
 	if mapFile.is_empty():return

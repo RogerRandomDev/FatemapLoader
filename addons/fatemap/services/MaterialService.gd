@@ -8,7 +8,15 @@ static var materialHashes:Dictionary={}
 static var basicMaterial:Material=null
 static var basicMaterialParams:Dictionary={}
 static var materialSource:String="res://FateMap/Imported/"
+static var hashMap:Dictionary={}
 
+static func loadHashMap()->void:
+	var f=FileAccess.open("res://FateMap/Imported/FMTHash.dat",FileAccess.READ)
+	while not f.eof_reached():
+		var line = f.get_line().split(":",true,1)
+		if line.size()<2:continue
+		hashMap[int(line[0])]=line[1]
+	
 
 static func setDefaultMaterialBase(material:Material,params:Dictionary={})->void:
 	basicMaterial=material
@@ -42,6 +50,8 @@ static func getMaterial(materialName:StringName)->materialModel:
 	return materialList[index]
 
 static func getMaterialByHash(materialHash:int)->materialModel:
+	if not materialHashes.has(materialHash) and hashMap.has(materialHash):
+		loadFMT(hashMap[materialHash])
 	return materialHashes.get(materialHash,null)
 
 static func loadAllFMT(path:String)->void:
