@@ -18,6 +18,10 @@ config/name="fatemap_example_test"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 
+[autoload]
+
+MaterialService="*uid://c73a7hajrw74a"
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/fatemap/plugin.cfg")

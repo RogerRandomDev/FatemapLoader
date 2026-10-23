@@ -19,6 +19,8 @@ func _enter_tree() -> void:
 	# Initialization of the plugin goes here.
 	add_tool_menu_item("Create FMTs",tools.CreateFMTs)
 	add_tool_menu_item("Update FMT hashmap",tools.updateFMTHashMap)
+	#autoload
+	add_autoload_singleton("MaterialService","res://addons/fatemap/services/MaterialService.gd")
 	# Create Importer
 	fmt_import=preload("res://addons/fatemap/Importers/FMTImport.gd").new()
 	add_import_plugin(fmt_import)
@@ -29,6 +31,8 @@ func _exit_tree() -> void:
 	# Clean-up of the plugin goes here.
 	remove_tool_menu_item("Create FMTs")
 	remove_tool_menu_item("Update FMT hashmap")
+	#autoload
+	remove_autoload_singleton("MaterialService")
 	# Remove Importer
 	remove_import_plugin(fmt_import)
 	fmt_import=null

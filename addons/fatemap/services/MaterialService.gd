@@ -1,16 +1,14 @@
-@tool
 #marked tool so you can test it without running the scene.
-extends RefCounted
-class_name MaterialService
+extends Node
 
-static var materialList:Array[materialModel]=[]
-static var materialHashes:Dictionary={}
-static var basicMaterial:Material=null
-static var basicMaterialParams:Dictionary={}
-static var materialSource:String="res://FateMap/Imported/"
-static var hashMap:Dictionary={}
+var materialList:Array[materialModel]=[]
+var materialHashes:Dictionary={}
+var basicMaterial:Material=null
+var basicMaterialParams:Dictionary={}
+var materialSource:String="res://FateMap/Imported/"
+var hashMap:Dictionary={}
 
-static func loadHashMap()->void:
+func loadHashMap()->void:
 	var f=FileAccess.open("res://FateMap/Imported/FMTHash.dat",FileAccess.READ)
 	while not f.eof_reached():
 		var line = f.get_line().split(":",true,1)
@@ -18,11 +16,11 @@ static func loadHashMap()->void:
 		hashMap[int(line[0])]=line[1]
 	
 
-static func setDefaultMaterialBase(material:Material,params:Dictionary={})->void:
+func setDefaultMaterialBase(material:Material,params:Dictionary={})->void:
 	basicMaterial=material
 	basicMaterialParams=params
 
-static func addMaterial(materialName:StringName,material:Material=null,texture:Texture=null,params:Dictionary={},tags:PackedStringArray=[],path:String="")->bool:
+func addMaterial(materialName:StringName,material:Material=null,texture:Texture=null,params:Dictionary={},tags:PackedStringArray=[],path:String="")->bool:
 	var ignoreBaseParams:bool=false
 	if material==null:material=basicMaterial
 	else:ignoreBaseParams=true
@@ -41,27 +39,27 @@ static func addMaterial(materialName:StringName,material:Material=null,texture:T
 	
 	return true
 
-static func getMaterialList()->Array[materialModel]:return materialList
+func getMaterialList()->Array[materialModel]:return materialList
 
-static func getMaterial(materialName:StringName)->materialModel:
+func getMaterial(materialName:StringName)->materialModel:
 	var index = materialList.find_custom(func(mat):return mat.materialName==materialName)
 	
 	if index==-1:return null
 	return materialList[index]
 
-static func getMaterialByHash(materialHash:int)->materialModel:
+func getMaterialByHash(materialHash:int)->materialModel:
 	if not materialHashes.has(materialHash) and hashMap.has(materialHash):
 		loadFMT(hashMap[materialHash])
 	return materialHashes.get(materialHash,null)
 
-static func loadAllFMT(path:String)->void:
+func loadAllFMT(path:String)->void:
 	for d in DirAccess.get_directories_at(path):
 		loadAllFMT(path+"/"+d)
 	for f in DirAccess.get_files_at(path):
 		if not f.ends_with(".fmt"):continue
 		loadFMT(path+"/"+f)
 
-static func loadFMT(fmtPath:String)->materialModel:
+func loadFMT(fmtPath:String)->materialModel:
 	if not FileAccess.file_exists(fmtPath):return null
 	var fmt:FMTImportedResource=load(fmtPath)
 	
@@ -76,10 +74,10 @@ static func loadFMT(fmtPath:String)->materialModel:
 	
 	return getMaterial(fmt.materialName)
 
-static func FMTLineParameterFind(line,compare)->bool:
+func FMTLineParameterFind(line,compare)->bool:
 	return line.split("=")[0].strip_edges(false)==compare
 
-static func getValueOfFMTLine(line,default)->String:
+func getValueOfFMTLine(line,default)->String:
 	var sub=line.split("=",1)
 	if sub.size()<1:return default
 	return sub[1].strip_edges()
