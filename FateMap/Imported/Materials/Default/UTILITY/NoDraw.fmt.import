@@ -1,0 +1,14 @@
+[remap]
+
+importer="FateMap.FateMaterial"
+type="Resource"
+uid="uid://dy30jtxr5g6ab"
+path="res://.godot/imported/NoDraw.fmt-a8e7d1b9f7291a35c729504b4de022fb.res"
+
+[deps]
+
+source_file="res://FateMap/Imported/Materials/Default/UTILITY/NoDraw.fmt"
+dest_files=["res://.godot/imported/NoDraw.fmt-a8e7d1b9f7291a35c729504b4de022fb.res"]
+
+[params]
+

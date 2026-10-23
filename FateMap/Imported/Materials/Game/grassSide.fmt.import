@@ -1,0 +1,14 @@
+[remap]
+
+importer="FateMap.FateMaterial"
+type="Resource"
+uid="uid://c0vfhie5tnwhc"
+path="res://.godot/imported/grassSide.fmt-c4e16ad36667e7b2daae67219ad6af80.res"
+
+[deps]
+
+source_file="res://FateMap/Imported/Materials/Game/grassSide.fmt"
+dest_files=["res://.godot/imported/grassSide.fmt-c4e16ad36667e7b2daae67219ad6af80.res"]
+
+[params]
+

@@ -1,0 +1,14 @@
+[remap]
+
+importer="FateMap.FateMaterial"
+type="Resource"
+uid="uid://pmwm5k6y76fk"
+path="res://.godot/imported/Exclude.fmt-487b3e13a3e7d9353f92174306c57608.res"
+
+[deps]
+
+source_file="res://FateMap/Imported/Materials/Default/UTILITY/Exclude.fmt"
+dest_files=["res://.godot/imported/Exclude.fmt-487b3e13a3e7d9353f92174306c57608.res"]
+
+[params]
+

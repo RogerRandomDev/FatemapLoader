@@ -1,0 +1,14 @@
+[remap]
+
+importer="FateMap.FateMaterial"
+type="Resource"
+uid="uid://cd0x01i37bxml"
+path="res://.godot/imported/GlassExample.fmt-7f36fbc217ab7dff587f770a8cdd820a.res"
+
+[deps]
+
+source_file="res://FateMap/Imported/Materials/Default/GlassExample.fmt"
+dest_files=["res://.godot/imported/GlassExample.fmt-7f36fbc217ab7dff587f770a8cdd820a.res"]
+
+[params]
+

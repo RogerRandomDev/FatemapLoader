@@ -1,0 +1,14 @@
+[remap]
+
+importer="FateMap.FateMaterial"
+type="Resource"
+uid="uid://ncbdupelvsfs"
+path="res://.godot/imported/grassTop.fmt-db48a4563c64bdeca1fb9e7ad2851b10.res"
+
+[deps]
+
+source_file="res://FateMap/Imported/Materials/Game/grassTop.fmt"
+dest_files=["res://.godot/imported/grassTop.fmt-db48a4563c64bdeca1fb9e7ad2851b10.res"]
+
+[params]
+

@@ -1,0 +1,14 @@
+[remap]
+
+importer="FateMap.FateMaterial"
+type="Resource"
+uid="uid://dx36soc5cukaq"
+path="res://.godot/imported/Tile69.fmt-bdf964d446978028a7c0ed550eccd7fb.res"
+
+[deps]
+
+source_file="res://FateMap/Imported/Materials/Default/Tile69.fmt"
+dest_files=["res://.godot/imported/Tile69.fmt-bdf964d446978028a7c0ed550eccd7fb.res"]
+
+[params]
+

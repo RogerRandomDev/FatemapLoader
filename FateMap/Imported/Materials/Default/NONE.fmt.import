@@ -1,0 +1,14 @@
+[remap]
+
+importer="FateMap.FateMaterial"
+type="Resource"
+uid="uid://bo5bjvh6m3w0"
+path="res://.godot/imported/NONE.fmt-7bc69bbfd687ec2684ea450a89d9e9bc.res"
+
+[deps]
+
+source_file="res://FateMap/Imported/Materials/Default/NONE.fmt"
+dest_files=["res://.godot/imported/NONE.fmt-7bc69bbfd687ec2684ea450a89d9e9bc.res"]
+
+[params]
+
