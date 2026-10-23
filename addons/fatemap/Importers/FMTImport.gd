@@ -25,22 +25,26 @@ func _import(source_file, save_path, options, r_platform_variants, r_gen_files):
 		return FileAccess.get_open_error()
 	var contents = Array(file.get_as_text().split("\n",true))
 	var values:Dictionary={}
-	var nameLine = contents.find_custom(MaterialService.FMTLineParameterFind.bind("name"))
-	var materialLine = contents.find_custom(MaterialService.FMTLineParameterFind.bind("material"))
-	var textureLine = contents.find_custom(MaterialService.FMTLineParameterFind.bind("texture"))
-	var parameterStartLine = contents.find_custom(MaterialService.FMTLineParameterFind.bind("parameters"))
-	var tagStartLine = contents.find_custom(MaterialService.FMTLineParameterFind.bind("tags"))
+	var nameLine = contents.find_custom(FMTLineParameterFind.bind("name"))
+	var materialLine = contents.find_custom(FMTLineParameterFind.bind("material"))
+	var textureLine = contents.find_custom(FMTLineParameterFind.bind("texture"))
+	var parameterStartLine = contents.find_custom(FMTLineParameterFind.bind("parameters"))
+	var tagStartLine = contents.find_custom(FMTLineParameterFind.bind("tags"))
 	
-	values["name"]=MaterialService.getValueOfFMTLine(contents[nameLine],"NONE")
-	values["material"]=MaterialService.getValueOfFMTLine(contents[materialLine],"Default/defaultMaterial.material")
-	values["texture"]=MaterialService.getValueOfFMTLine(contents[textureLine],"Default/defaultTexture.png")
+	values["name"]=getValueOfFMTLine(contents[nameLine],"NONE")
+	values["material"]=getValueOfFMTLine(contents[materialLine],"Default/defaultMaterial.material")
+	values["texture"]=getValueOfFMTLine(contents[textureLine],"Default/defaultTexture.png")
 	
 	#parameters
-	var parameterLines=MaterialService.getValueOfFMTLine(contents[parameterStartLine],"{}").strip_edges().trim_prefix("{").trim_suffix("}").split(",")
+	var parameterLines=getValueOfFMTLine(contents[parameterStartLine],"{}").strip_edges().trim_prefix("{").trim_suffix("}").split(",")
 	var i:int=parameterStartLine+1
 	while contents[i].begins_with("\t"):
-		var split_sub=contents[i].split("=")
+		var split_sub=contents[i].split("=",false,1)
+		#if we have a ":" before = or dont have a = at all
+		if split_sub.size()<2 or split_sub[0].contains(":"):
+			split_sub=contents[i].split(":",false,1)
 		split_sub[0]="\"%s\""%split_sub[0].strip_edges()
+		split_sub[1]=split_sub[1].strip_edges()
 		var subLine=":".join(split_sub).strip_edges()
 		if subLine.length()<2:continue
 		parameterLines.push_back(subLine)
@@ -50,7 +54,7 @@ func _import(source_file, save_path, options, r_platform_variants, r_gen_files):
 	if not parameterLines.contains(":"):values["parameters"]={}
 	else:values["parameters"]=JSON.parse_string(parameterLines)
 	#tags
-	var tagLines=MaterialService.getValueOfFMTLine(contents[tagStartLine],"").strip_edges().trim_prefix("[").trim_suffix("]").split(",")
+	var tagLines=getValueOfFMTLine(contents[tagStartLine],"").strip_edges().trim_prefix("[").trim_suffix("]").split(",")
 	i=tagStartLine+1
 	while contents.size()>i and contents[i].begins_with("\t"):
 		var subLine=contents[i].strip_edges()
@@ -67,3 +71,12 @@ func _import(source_file, save_path, options, r_platform_variants, r_gen_files):
 	material.materialTags=values.get("tags","").split(",")
 	material.path=source_file
 	return ResourceSaver.save(material, "%s.%s" % [save_path, _get_save_extension()])
+
+
+func FMTLineParameterFind(line,compare)->bool:
+	return line.split("=")[0].strip_edges(false)==compare
+
+func getValueOfFMTLine(line,default)->String:
+	var sub=line.split("=",1)
+	if sub.size()<1:return default
+	return sub[1].strip_edges()

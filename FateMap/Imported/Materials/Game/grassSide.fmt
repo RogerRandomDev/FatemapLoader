@@ -1,5 +1,8 @@
 name = grassSide.png
 material = Materials/Default/defaultMaterial.material
 texture = Materials/Game/grassSide.png
-parameters = {}
+parameters = {
+	mat = "test"
+	mat2 = "test"
+}
 tags = []

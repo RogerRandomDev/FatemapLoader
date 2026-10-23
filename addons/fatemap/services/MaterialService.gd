@@ -74,14 +74,6 @@ func loadFMT(fmtPath:String)->materialModel:
 	
 	return getMaterial(fmt.materialName)
 
-func FMTLineParameterFind(line,compare)->bool:
-	return line.split("=")[0].strip_edges(false)==compare
-
-func getValueOfFMTLine(line,default)->String:
-	var sub=line.split("=",1)
-	if sub.size()<1:return default
-	return sub[1].strip_edges()
-
 
 class materialModel extends Resource:
 	var materialName:StringName
